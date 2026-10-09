@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pump-azure-radar"
+version = "0.1.0"
+description = "azure-radar with a one-command push of inventory and billing CSVs to Pump"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [{name = "Pump"}]
+dependencies = ["azure-radar>=1.2.1,<1.3"]
+
+[project.optional-dependencies]
+dev = ["pytest", "build", "twine"]
+
+# azure-radar's CLI, plus `run --upload-token`.
+[project.scripts]
+pump-azure-radar = "pump_azure_radar.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
