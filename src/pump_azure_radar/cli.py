@@ -2,12 +2,14 @@
 
 azure-radar builds its ``run`` command internally, so we can't add flags to it.
 Instead we strip our own flags from argv, hand the rest to azure-radar's real
-Typer app, and once ``run`` has written its CSVs, upload ``azure_inventory.csv``
-and ``azure_billing.csv`` to Pump.
+Typer app, and once ``run`` has written its CSVs, rewrite ``azure_inventory.csv``
+with the columns Pump reads (see ``inventory.py``) and upload it and
+``azure_billing.csv`` to Pump.
 """
 
 import argparse
 import os
+import subprocess
 import sys
 import time
 
@@ -68,6 +70,14 @@ def main():
         sys.exit(f"  [!] {INVENTORY_CSV} was not written: nothing to upload.")
     if "billing" not in files:
         print("\n  [!] No billing CSV was written: uploading inventory only.")
+
+    from pump_azure_radar.inventory import write_inventory
+
+    try:
+        count = write_inventory(INVENTORY_CSV)
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"  [!] Could not list resources for Pump: {e.stderr.strip()}")
+    print(f"\nRewrote {INVENTORY_CSV} with resource ids, subscription and tags ({count} resources)")
 
     print("\nUploading to Pump …")
     try:

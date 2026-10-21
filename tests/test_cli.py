@@ -17,7 +17,12 @@ def _run_main(monkeypatch, tmp_path, argv, write=("azure_inventory.csv", "azure_
             (tmp_path / name).write_text("a,b\n1,2\n")
         raise SystemExit(exit_code)  # Typer's standalone mode always exits
 
+    def fake_write_inventory(path):
+        seen["rewrote"] = path
+        return 0
+
     monkeypatch.setattr("azure_radar.cli.app", fake_app)
+    monkeypatch.setattr("pump_azure_radar.inventory.write_inventory", fake_write_inventory)
     monkeypatch.setattr("pump_azure_radar.upload.upload_csvs",
                         lambda base, token, files: seen.update(base=base, token=token,
                                                                 files=sorted(files)))
@@ -31,6 +36,7 @@ def test_run_with_token_strips_flags_adds_billing_and_uploads(monkeypatch, tmp_p
     assert seen["args"] == ["run", "--days", "60", "--billing"]
     assert (seen["token"], seen["base"]) == ("T", "https://api.pump.co")
     assert seen["files"] == ["billing", "inventory"]
+    assert seen["rewrote"] == "azure_inventory.csv"
 
 
 def test_custom_billing_output_is_uploaded(monkeypatch, tmp_path):
@@ -59,6 +65,7 @@ def test_stale_billing_csv_is_not_uploaded(monkeypatch, tmp_path):
 def test_run_without_token_does_not_upload(monkeypatch, tmp_path):
     seen = _run_main(monkeypatch, tmp_path, ["run"])
     assert "token" not in seen
+    assert "rewrote" not in seen
     assert seen["args"] == ["run"]
 
 
