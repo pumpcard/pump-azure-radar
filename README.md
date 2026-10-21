@@ -43,6 +43,9 @@ straight to Pump. Pump detects both files, runs its analysis, and surfaces the
 findings in the app.
 
 - `--billing` is added automatically when `--upload-token` is given.
+- Before uploading, `azure_inventory.csv` is relisted from the billed subscription
+  (`AZURE_SUBSCRIPTION_ID`, else the `az` default) with each resource's id,
+  subscription and tags added, so Pump can join it to billing and check tagging.
 - `--days` sets the billing window (30, 60 or 90; default 30).
 - `--billing-output` changes the billing CSV path (default `azure_billing.csv`).
 - Reading cost data needs the **Cost Management Reader** role on the subscription.
@@ -81,7 +84,8 @@ PUMP_API_BASE=http://localhost:8001 pump-azure-radar run --upload-token <TOKEN>
 This package builds on azure-radar (MIT). The scanning and billing code is
 upstream's; the Pump push is this package's addition. Unlike gcp-radar, azure-radar
 has no plugin hook and already writes separate inventory and billing CSVs, so this
-wrapper calls azure-radar's CLI in-process and uploads its output files as-is.
+wrapper calls azure-radar's CLI in-process, relists the inventory with the columns
+Pump reads (`pump_azure_radar/inventory.py`), and uploads both files.
 
 ## Development
 
